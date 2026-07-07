@@ -74,7 +74,7 @@ assets/              App icons / splash
 1. **Scaffold** ✅ — Expo Router, Supabase client, React Query, tokens + primitives
 2. **Auth + roles** ✅ — magic-link sign-in, client/dietician routing, RLS foundations
 3. **Goals** ✅ — diet-profile presets + fine-tuning, persisted to `diet_profiles`
-4. Food lookup — `lookup-food` Edge Function (Nutritionix → OFF), caching
+4. **Food lookup** ✅ — `lookup-food` Edge Function (Nutritionix → OFF), normalization, `foods` cache
 5. Scanner + engine — camera scan, alignment engine (unit-tested), verdict card
 6. Today + history — macro rings, remaining budget, adherence trend
 7. Dietician — invite-code linking, RLS, dashboard, notes, Realtime

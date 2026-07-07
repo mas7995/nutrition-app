@@ -22,6 +22,7 @@ If you prefer the Supabase CLI: `supabase link` then `supabase db push`.
 | --- | --- |
 | `0001_profiles.sql` | `profiles` table + own-row RLS policies (Phase 2) |
 | `0002_diet_profiles.sql` | `diet_profiles` table (targets/rules/strictness) + own-row RLS (Phase 3) |
+| `0003_foods.sql` | `foods` barcode cache — readable by any signed-in user, writable only by the Edge Function (Phase 4) |
 
 ## 2. Enable email sign-in with a 6-digit code
 
@@ -47,7 +48,39 @@ That's it. `signInWithOtp({ email })` sends the code; the app calls
 > meant for testing. For real use, add an SMTP provider under
 > **Authentication → Emails → SMTP settings**.
 
-## 3. Environment
+## 3. Deploy the `lookup-food` Edge Function
+
+All food-data lookups route through this function so API keys never ship in the
+app. It checks the `foods` cache, then tries Nutritionix (if configured), then
+falls back to Open Food Facts, normalizes the result, caches it, and returns it.
+
+You need the [Supabase CLI](https://supabase.com/docs/guides/cli) once:
+
+```bash
+supabase login
+supabase link --project-ref oyegzgxrmhogyaoaqsoh
+```
+
+Set the server-side secrets (these live ONLY here — never in the app bundle):
+
+```bash
+# Open Food Facts needs no key and works immediately.
+# Nutritionix is the primary source — add it to enable richer data:
+supabase secrets set NUTRITIONIX_APP_ID=your-app-id NUTRITIONIX_APP_KEY=your-app-key
+```
+
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically — you
+do not set those. Then deploy:
+
+```bash
+supabase functions deploy lookup-food
+```
+
+The function keeps JWT verification on (the default), so only signed-in users
+can call it. Until the Nutritionix secrets are set, lookups still work via Open
+Food Facts alone.
+
+## 4. Environment
 
 The app reads `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 from `.env` (gitignored). The publishable/anon key is safe in the bundle —

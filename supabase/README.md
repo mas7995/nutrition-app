@@ -23,6 +23,7 @@ If you prefer the Supabase CLI: `supabase link` then `supabase db push`.
 | `0001_profiles.sql` | `profiles` table + own-row RLS policies (Phase 2) |
 | `0002_diet_profiles.sql` | `diet_profiles` table (targets/rules/strictness) + own-row RLS (Phase 3) |
 | `0003_foods.sql` | `foods` barcode cache — readable by any signed-in user, writable only by the Edge Function (Phase 4) |
+| `0004_food_logs.sql` | `food_logs` — logged items with a nutrient + verdict snapshot; own-row RLS (Phase 5) |
 
 ## 2. Enable email sign-in with a 6-digit code
 

@@ -6,7 +6,8 @@
  * into this exact shape so the rest of the app never has to branch on source.
  */
 
-export type FoodSource = 'nutritionix' | 'off';
+/** 'manual' = user-entered food (not cached in the foods table). */
+export type FoodSource = 'nutritionix' | 'off' | 'manual';
 
 export type BarcodeFormat = 'ean13' | 'ean8' | 'upc_a' | 'upc_e';
 

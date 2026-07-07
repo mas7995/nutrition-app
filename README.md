@@ -75,7 +75,7 @@ assets/              App icons / splash
 2. **Auth + roles** ✅ — magic-link sign-in, client/dietician routing, RLS foundations
 3. **Goals** ✅ — diet-profile presets + fine-tuning, persisted to `diet_profiles`
 4. **Food lookup** ✅ — `lookup-food` Edge Function (Nutritionix → OFF), normalization, `foods` cache
-5. Scanner + engine — camera scan, alignment engine (unit-tested), verdict card
+5. **Scanner + engine** ✅ — camera scan, alignment engine (16 unit tests), verdict card, logging
 6. Today + history — macro rings, remaining budget, adherence trend
 7. Dietician — invite-code linking, RLS, dashboard, notes, Realtime
 8. Polish — haptics, animation, empty/error states, manual entry, dark mode

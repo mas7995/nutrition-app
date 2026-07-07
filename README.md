@@ -72,8 +72,8 @@ assets/              App icons / splash
 ## Build phases
 
 1. **Scaffold** ✅ — Expo Router, Supabase client, React Query, tokens + primitives
-2. Auth + roles — magic-link sign-in, client/dietician routing, RLS foundations
-3. Goals — diet-profile presets + fine-tuning
+2. **Auth + roles** ✅ — magic-link sign-in, client/dietician routing, RLS foundations
+3. **Goals** ✅ — diet-profile presets + fine-tuning, persisted to `diet_profiles`
 4. Food lookup — `lookup-food` Edge Function (Nutritionix → OFF), caching
 5. Scanner + engine — camera scan, alignment engine (unit-tested), verdict card
 6. Today + history — macro rings, remaining budget, adherence trend

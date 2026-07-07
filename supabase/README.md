@@ -21,6 +21,7 @@ If you prefer the Supabase CLI: `supabase link` then `supabase db push`.
 | File | Adds |
 | --- | --- |
 | `0001_profiles.sql` | `profiles` table + own-row RLS policies (Phase 2) |
+| `0002_diet_profiles.sql` | `diet_profiles` table (targets/rules/strictness) + own-row RLS (Phase 3) |
 
 ## 2. Enable email sign-in with a 6-digit code
 

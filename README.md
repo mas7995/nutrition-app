@@ -61,6 +61,23 @@ src/
 assets/              App icons / splash
 ```
 
+## Web hosting (Railway)
+
+The app also builds as a single-page web app so it can be hosted at a URL —
+handy for trying it without Expo Go. Railway is pre-configured via
+`railway.json`:
+
+- **Build:** `npm run build:web` → `expo export --platform web` → `dist/`
+- **Serve:** `npm run serve:web` → `node server.js` (zero-dep static server with
+  SPA fallback, listens on `$PORT`)
+
+Deploy from the Railway dashboard: **New Project → Deploy from GitHub repo →**
+pick this repo and the working branch → Railway reads `railway.json` and builds
+automatically → **Settings → Networking → Generate Domain** for a public URL.
+
+Note: in-browser barcode scanning is unreliable on mobile Safari; use manual
+entry on web. Native builds (Expo Go / EAS) get full camera scanning.
+
 ## Scripts
 
 | Command | What it does |

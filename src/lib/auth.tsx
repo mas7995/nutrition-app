@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { Profile, Role } from '@/types/profile';
 import { isSupabaseConfigured, supabase } from './supabase';
@@ -114,9 +114,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadProfile]);
 
   const sendEmailCode = useCallback(async (email: string) => {
+    // On web, the emailed link redirects back to wherever the app is served
+    // and supabase-js completes sign-in from the URL. On native we rely on the
+    // 6-digit code instead (deep-linking into Expo Go is unreliable).
+    const emailRedirectTo =
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? window.location.origin
+        : undefined;
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: true },
+      options: { shouldCreateUser: true, emailRedirectTo },
     });
     return { error: error?.message ?? null };
   }, []);

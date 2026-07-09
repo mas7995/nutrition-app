@@ -17,6 +17,7 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isWeb = Platform.OS === 'web';
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const codeValid = /^\d{6}$/.test(code.trim());
 
@@ -84,42 +85,58 @@ export default function SignIn() {
               containerStyle={{ marginBottom: spacing.lg }}
             />
             <Button
-              label="Email me a code"
+              label={isWeb ? 'Email me a sign-in link' : 'Email me a code'}
               fullWidth
               onPress={handleSend}
               loading={busy}
               disabled={!emailValid}
             />
             <Text variant="caption" color="textTertiary" style={{ marginTop: spacing.md }}>
-              We'll send a 6-digit code to sign you in — no password needed.
+              {isWeb
+                ? "We'll email you a secure sign-in link — no password needed."
+                : "We'll send a 6-digit code to sign you in — no password needed."}
             </Text>
           </Card>
         ) : (
           <Card variant="elevated">
             <Text variant="h3" style={{ marginBottom: spacing.xs }}>
-              Enter your code
+              {isWeb ? 'Check your email' : 'Enter your code'}
             </Text>
             <Text variant="caption" color="textSecondary" style={{ marginBottom: spacing.lg }}>
-              We emailed a 6-digit code to {email}.
+              {isWeb
+                ? `We emailed a sign-in link to ${email}. Open it and tap "Confirm email address" — you'll be signed in automatically.`
+                : `We emailed a 6-digit code to ${email}.`}
             </Text>
-            <TextField
-              label="6-digit code"
-              placeholder="123456"
-              keyboardType="number-pad"
-              inputMode="numeric"
-              maxLength={6}
-              value={code}
-              onChangeText={setCode}
-              error={error ?? undefined}
-              containerStyle={{ marginBottom: spacing.lg }}
-            />
-            <Button
-              label="Verify & continue"
-              fullWidth
-              onPress={handleVerify}
-              loading={busy}
-              disabled={!codeValid}
-            />
+
+            {isWeb ? (
+              <Text variant="caption" color="textTertiary" style={{ marginBottom: spacing.lg }}>
+                Keep this tab open, or the link may open a new one — either way
+                you'll land in the app signed in. Didn't get it? Check spam, or
+                resend below.
+              </Text>
+            ) : (
+              <>
+                <TextField
+                  label="6-digit code"
+                  placeholder="123456"
+                  keyboardType="number-pad"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={code}
+                  onChangeText={setCode}
+                  error={error ?? undefined}
+                  containerStyle={{ marginBottom: spacing.lg }}
+                />
+                <Button
+                  label="Verify & continue"
+                  fullWidth
+                  onPress={handleVerify}
+                  loading={busy}
+                  disabled={!codeValid}
+                />
+              </>
+            )}
+
             <Button
               label="Use a different email"
               variant="ghost"

@@ -44,6 +44,13 @@ function streamFile(res, filePath) {
 
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+
+  // Lightweight health check for the host platform.
+  if (urlPath === '/healthz') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end('ok');
+  }
+
   const filePath = path.normalize(path.join(DIST, urlPath));
 
   // Prevent path traversal outside dist/.

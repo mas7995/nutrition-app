@@ -94,5 +94,5 @@ entry on web. Native builds (Expo Go / EAS) get full camera scanning.
 4. **Food lookup** ✅ — `lookup-food` Edge Function (Nutritionix → OFF), normalization, `foods` cache
 5. **Scanner + engine** ✅ — camera scan, alignment engine (16 unit tests), verdict card, logging
 6. **Today + history** ✅ — macro rings, remaining budget, today's log, adherence trend
-7. Dietician — invite-code linking, RLS, dashboard, notes, Realtime
+7. **Dietician** ✅ — invite-code linking, cross-access RLS, dashboard, editable plans, notes, Realtime
 8. Polish — haptics, animation, empty/error states, manual entry, dark mode

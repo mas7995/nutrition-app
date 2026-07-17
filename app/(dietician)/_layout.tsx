@@ -38,6 +38,8 @@ export default function DieticianLayout() {
           ),
         }}
       />
+      {/* Client detail — reachable via push, hidden from the tab bar. */}
+      <Tabs.Screen name="client/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

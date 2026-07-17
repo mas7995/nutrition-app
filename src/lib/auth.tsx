@@ -30,6 +30,17 @@ interface AuthState {
     email: string,
     token: string,
   ) => Promise<{ error: string | null }>;
+  /** Sign in with an email + password (no email round-trip). */
+  signInWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null }>;
+  /** Create an account with an email + password. With email confirmation off,
+   * this signs the user in immediately. */
+  signUpWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   /** Create the profile row on first sign-in with the chosen role. */
   createProfile: (
     role: Role,
@@ -137,6 +148,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message ?? null };
   }, []);
 
+  const signInWithPassword = useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      return { error: error?.message ?? null };
+    },
+    [],
+  );
+
+  const signUpWithPassword = useCallback(
+    async (email: string, password: string) => {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (error) return { error: error.message, needsConfirmation: false };
+      // When email confirmation is on, no session comes back until confirmed.
+      const needsConfirmation = !data.session;
+      return { error: null, needsConfirmation };
+    },
+    [],
+  );
+
   const createProfile = useCallback(
     async (role: Role, displayName: string) => {
       const uid = session?.user.id;
@@ -173,6 +209,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       configured: isSupabaseConfigured,
       sendEmailCode,
       verifyEmailCode,
+      signInWithPassword,
+      signUpWithPassword,
       createProfile,
       refreshProfile,
       signOut,
@@ -184,6 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileLoaded,
       sendEmailCode,
       verifyEmailCode,
+      signInWithPassword,
+      signUpWithPassword,
       createProfile,
       refreshProfile,
       signOut,

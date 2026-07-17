@@ -1,29 +1,75 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, View } from 'react-native';
 
-import { Button, Card, Screen, Text, TextField } from '@/components';
+import { Button, Card, Screen, SegmentedControl, Text, TextField } from '@/components';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/theme/ThemeProvider';
 
+type Method = 'password' | 'link';
 type Step = 'email' | 'code';
+type PwMode = 'signin' | 'signup';
 
 export default function SignIn() {
   const { spacing } = useTheme();
-  const { sendEmailCode, verifyEmailCode, configured } = useAuth();
-
-  const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    sendEmailCode,
+    verifyEmailCode,
+    signInWithPassword,
+    signUpWithPassword,
+    configured,
+  } = useAuth();
 
   const isWeb = Platform.OS === 'web';
+  const [method, setMethod] = useState<Method>('password');
+
+  // Password flow
+  const [pwMode, setPwMode] = useState<PwMode>('signin');
+  const [password, setPassword] = useState('');
+
+  // Shared
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // Email-link flow
+  const [step, setStep] = useState<Step>('email');
+  const [code, setCode] = useState('');
+
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const codeValid = /^\d{6}$/.test(code.trim());
+  const passwordValid = password.length >= 6;
+
+  function resetMessages() {
+    setError(null);
+    setNotice(null);
+  }
+
+  async function handlePassword() {
+    resetMessages();
+    setBusy(true);
+    const fn =
+      pwMode === 'signin'
+        ? signInWithPassword(email, password)
+        : signUpWithPassword(email, password).then((r) => {
+            if (!r.error && r.needsConfirmation) {
+              setNotice(
+                'Account created. Email confirmation is on for this project — ' +
+                  'turn it off in Supabase (Auth → Providers → Email) to sign in ' +
+                  'without email.',
+              );
+            }
+            return { error: r.error };
+          });
+    const { error: err } = await fn;
+    setBusy(false);
+    if (err) setError(err);
+    // On success the auth guard routes onward automatically.
+  }
 
   async function handleSend() {
+    resetMessages();
     setBusy(true);
-    setError(null);
     const { error: err } = await sendEmailCode(email);
     setBusy(false);
     if (err) {
@@ -34,12 +80,11 @@ export default function SignIn() {
   }
 
   async function handleVerify() {
+    resetMessages();
     setBusy(true);
-    setError(null);
     const { error: err } = await verifyEmailCode(email, code);
     setBusy(false);
     if (err) setError(err);
-    // On success, the auth guard routes us onward automatically.
   }
 
   return (
@@ -67,10 +112,64 @@ export default function SignIn() {
               your .env and restart the dev server to enable sign-in.
             </Text>
           </Card>
+        ) : method === 'password' ? (
+          <Card variant="elevated">
+            <SegmentedControl<PwMode>
+              options={[
+                { value: 'signin', label: 'Sign in' },
+                { value: 'signup', label: 'Create account' },
+              ]}
+              value={pwMode}
+              onChange={(m) => {
+                setPwMode(m);
+                resetMessages();
+              }}
+            />
+            <View style={{ height: spacing.lg }} />
+            <TextField
+              label="Email"
+              placeholder="you@example.com"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              inputMode="email"
+              value={email}
+              onChangeText={setEmail}
+              containerStyle={{ marginBottom: spacing.md }}
+            />
+            <TextField
+              label="Password"
+              placeholder="At least 6 characters"
+              secureTextEntry
+              autoCapitalize="none"
+              value={password}
+              onChangeText={setPassword}
+              error={error ?? undefined}
+              hint={notice ?? undefined}
+              containerStyle={{ marginBottom: spacing.lg }}
+            />
+            <Button
+              label={pwMode === 'signin' ? 'Sign in' : 'Create account & continue'}
+              fullWidth
+              onPress={handlePassword}
+              loading={busy}
+              disabled={!emailValid || !passwordValid}
+            />
+            <Button
+              label="Prefer an email link? Use that instead"
+              variant="ghost"
+              fullWidth
+              onPress={() => {
+                setMethod('link');
+                resetMessages();
+              }}
+              style={{ marginTop: spacing.sm }}
+            />
+          </Card>
         ) : step === 'email' ? (
           <Card variant="elevated">
             <Text variant="h3" style={{ marginBottom: spacing.lg }}>
-              Sign in
+              Sign in with a link
             </Text>
             <TextField
               label="Email"
@@ -91,11 +190,16 @@ export default function SignIn() {
               loading={busy}
               disabled={!emailValid}
             />
-            <Text variant="caption" color="textTertiary" style={{ marginTop: spacing.md }}>
-              {isWeb
-                ? "We'll email you a secure sign-in link — no password needed."
-                : "We'll send a 6-digit code to sign you in — no password needed."}
-            </Text>
+            <Button
+              label="Use a password instead"
+              variant="ghost"
+              fullWidth
+              onPress={() => {
+                setMethod('password');
+                resetMessages();
+              }}
+              style={{ marginTop: spacing.sm }}
+            />
           </Card>
         ) : (
           <Card variant="elevated">
@@ -104,17 +208,10 @@ export default function SignIn() {
             </Text>
             <Text variant="caption" color="textSecondary" style={{ marginBottom: spacing.lg }}>
               {isWeb
-                ? `We emailed a sign-in link to ${email}. Open it and tap "Confirm email address" — you'll be signed in automatically.`
+                ? `We emailed a sign-in link to ${email}. Open it and tap "Confirm email address".`
                 : `We emailed a 6-digit code to ${email}.`}
             </Text>
-
-            {isWeb ? (
-              <Text variant="caption" color="textTertiary" style={{ marginBottom: spacing.lg }}>
-                Keep this tab open, or the link may open a new one — either way
-                you'll land in the app signed in. Didn't get it? Check spam, or
-                resend below.
-              </Text>
-            ) : (
+            {!isWeb && (
               <>
                 <TextField
                   label="6-digit code"
@@ -136,15 +233,14 @@ export default function SignIn() {
                 />
               </>
             )}
-
             <Button
-              label="Use a different email"
+              label="Back"
               variant="ghost"
               fullWidth
               onPress={() => {
                 setStep('email');
                 setCode('');
-                setError(null);
+                resetMessages();
               }}
               style={{ marginTop: spacing.sm }}
             />

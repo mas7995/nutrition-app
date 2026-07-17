@@ -39,6 +39,15 @@ export default function ClientLayout() {
         }}
       />
       <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="analytics-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

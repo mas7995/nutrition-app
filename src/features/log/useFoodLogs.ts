@@ -70,6 +70,101 @@ export function remainingBudget(
   };
 }
 
+// ── Recent logs across days (for History) ────────────────────────
+
+export function recentLogsKey(userId: string | undefined, days: number) {
+  return ['food_logs', userId, 'recent', days] as const;
+}
+
+async function fetchLogsSince(userId: string, days: number): Promise<FoodLog[]> {
+  const since = new Date();
+  since.setHours(0, 0, 0, 0);
+  since.setDate(since.getDate() - (days - 1));
+  const { data, error } = await supabase
+    .from('food_logs')
+    .select('id, user_id, barcode, name, meal, nutrients, servings, verdict, reasons, logged_at')
+    .eq('user_id', userId)
+    .gte('logged_at', since.toISOString())
+    .order('logged_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as FoodLog[];
+}
+
+export function useRecentLogs(userId: string | undefined, days = 14) {
+  return useQuery<FoodLog[]>({
+    queryKey: recentLogsKey(userId, days),
+    queryFn: () => fetchLogsSince(userId as string, days),
+    enabled: Boolean(userId),
+  });
+}
+
+function localDayKey(iso: string): string {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+export interface DayAdherence {
+  green: number;
+  amber: number;
+  red: number;
+  total: number;
+}
+
+export interface DayGroup {
+  dayKey: string;
+  logs: FoodLog[];
+  adherence: DayAdherence;
+}
+
+/** Group logs by local day, newest first, with per-day verdict tallies. */
+export function groupLogsByDay(logs: FoodLog[]): DayGroup[] {
+  const map = new Map<string, FoodLog[]>();
+  for (const log of logs) {
+    const key = localDayKey(log.logged_at);
+    const arr = map.get(key);
+    if (arr) arr.push(log);
+    else map.set(key, [log]);
+  }
+  return Array.from(map.entries())
+    .map(([dayKey, dayLogs]) => {
+      const adherence: DayAdherence = { green: 0, amber: 0, red: 0, total: dayLogs.length };
+      for (const l of dayLogs) adherence[l.verdict] += 1;
+      return { dayKey, logs: dayLogs, adherence };
+    })
+    .sort((a, b) => (a.dayKey < b.dayKey ? 1 : -1));
+}
+
+/** Human label for a local day key (YYYY-MM-DD): Today / Yesterday / date. */
+export function dayLabel(dayKey: string): string {
+  const today = localDayKey(new Date().toISOString());
+  const yKey = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return localDayKey(d.toISOString());
+  })();
+  if (dayKey === today) return 'Today';
+  if (dayKey === yKey) return 'Yesterday';
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+/** Delete a log entry and refresh log queries. */
+export function useDeleteLog(userId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('food_logs').delete().eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['food_logs', userId] });
+    },
+  });
+}
+
 /** Insert a log entry and refresh today's logs. */
 export function useLogFood(userId: string | undefined) {
   const qc = useQueryClient();

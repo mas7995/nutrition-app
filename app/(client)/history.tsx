@@ -1,7 +1,15 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Card, DataRow, Placeholder, Screen, Text } from '@/components';
+import {
+  Card,
+  DataRow,
+  ErrorState,
+  Placeholder,
+  Screen,
+  SkeletonCard,
+  Text,
+} from '@/components';
 import { useAuth } from '@/lib/auth';
 import {
   DayAdherence,
@@ -40,13 +48,28 @@ export default function History() {
   const { session } = useAuth();
   const userId = session?.user.id;
 
-  const { data: logs, isLoading } = useRecentLogs(userId, RANGE_DAYS);
+  const { data: logs, isLoading, isError, refetch } = useRecentLogs(userId, RANGE_DAYS);
+
+  if (isError) {
+    return (
+      <Screen>
+        <ErrorState onRetry={() => refetch()} />
+      </Screen>
+    );
+  }
 
   if (isLoading) {
     return (
-      <Screen>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={colors.accent} />
+      <Screen scroll>
+        <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
+          <Text variant="overline" color="textTertiary">
+            LAST {RANGE_DAYS} DAYS
+          </Text>
+          <Text variant="h1">History</Text>
+        </View>
+        <View style={{ gap: spacing.lg }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
       </Screen>
     );

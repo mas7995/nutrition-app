@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 
+import { selectionFeedback } from '@/lib/haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { Text } from './Text';
 
@@ -38,7 +39,10 @@ export function SegmentedControl<T extends string>({
         return (
           <Pressable
             key={opt.value}
-            onPress={() => onChange(opt.value)}
+            onPress={() => {
+              if (!selected) selectionFeedback();
+              onChange(opt.value);
+            }}
             style={{
               flex: 1,
               paddingVertical: spacing.sm,

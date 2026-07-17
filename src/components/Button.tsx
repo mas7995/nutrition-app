@@ -7,6 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
+import { tapFeedback } from '@/lib/haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { Text } from './Text';
 
@@ -80,7 +81,14 @@ export function Button({
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading }}
       disabled={disabled || loading}
-      onPress={onPress}
+      onPress={
+        onPress
+          ? () => {
+              if (variant === 'primary' || variant === 'danger') tapFeedback();
+              onPress();
+            }
+          : undefined
+      }
       style={({ pressed }) => [
         container,
         pressed && !disabled && { opacity: 0.82 },

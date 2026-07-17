@@ -1,9 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button, Card, Placeholder, Screen, Tag, Text, TextField } from '@/components';
+import {
+  Button,
+  Card,
+  ErrorState,
+  Placeholder,
+  Screen,
+  SkeletonCard,
+  Tag,
+  Text,
+  TextField,
+} from '@/components';
 import { useAuth } from '@/lib/auth';
 import { useClients, useRedeemCode } from '@/features/dietician/useLinks';
 import { AdherenceGlance } from '@/types/dietician';
@@ -19,7 +29,7 @@ export default function Clients() {
   const { session } = useAuth();
   const dieticianId = session?.user.id;
 
-  const { data: clients, isLoading } = useClients(dieticianId);
+  const { data: clients, isLoading, isError, refetch } = useClients(dieticianId);
   const redeem = useRedeemCode(dieticianId);
 
   const [code, setCode] = useState('');
@@ -69,8 +79,13 @@ export default function Clients() {
         />
       </Card>
 
-      {isLoading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.xl }} />
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : isLoading ? (
+        <View style={{ gap: spacing.md }}>
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
       ) : (clients ?? []).length === 0 ? (
         <Card variant="sunken">
           <Placeholder

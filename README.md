@@ -95,4 +95,4 @@ entry on web. Native builds (Expo Go / EAS) get full camera scanning.
 5. **Scanner + engine** ✅ — camera scan, alignment engine (16 unit tests), verdict card, logging
 6. **Today + history** ✅ — macro rings, remaining budget, today's log, adherence trend
 7. **Dietician** ✅ — invite-code linking, cross-access RLS, dashboard, editable plans, notes, Realtime
-8. Polish — haptics, animation, empty/error states, manual entry, dark mode
+8. **Polish** ✅ — haptics, animation, skeletons, empty/error states, manual entry, dark mode, role switching

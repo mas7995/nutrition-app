@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { Image, Platform, View } from 'react-native';
+import { Image, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Button, SegmentedControl, Stepper, Tag, Text } from '@/components';
+import { verdictFeedback } from '@/lib/haptics';
 import { NormalizedFood } from '@/types/food';
 import { Meal } from '@/types/log';
 import { AlignmentResult, Severity, Verdict } from '@/types/verdict';
@@ -57,14 +57,7 @@ export function VerdictCard({
 
   // Haptics on the verdict moment.
   useEffect(() => {
-    if (Platform.OS === 'web') return;
-    const type =
-      result.verdict === 'green'
-        ? Haptics.NotificationFeedbackType.Success
-        : result.verdict === 'amber'
-          ? Haptics.NotificationFeedbackType.Warning
-          : Haptics.NotificationFeedbackType.Error;
-    Haptics.notificationAsync(type).catch(() => {});
+    verdictFeedback(result.verdict);
   }, [result.verdict]);
 
   return (

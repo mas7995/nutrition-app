@@ -19,8 +19,19 @@ import { useTheme } from '@/theme/ThemeProvider';
 export default function ClientProfile() {
   const { colors, spacing } = useTheme();
   const router = useRouter();
-  const { session, profile, signOut } = useAuth();
+  const { session, profile, signOut, createProfile } = useAuth();
   const userId = session?.user.id;
+
+  function switchToDietician() {
+    const msg = 'Switch to dietician mode? You can switch back anytime.';
+    const go = () => createProfile('dietician', profile?.display_name ?? '');
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      if (window.confirm(msg)) void go();
+    } else {
+      void go();
+    }
+  }
   const { data: diet } = useDietProfile(userId, true);
 
   const inviteCode = useMyInviteCode(userId);
@@ -203,7 +214,13 @@ export default function ClientProfile() {
         </View>
       )}
 
-      <Button label="Sign out" variant="secondary" fullWidth onPress={signOut} />
+      <Button
+        label="Switch to dietician mode"
+        variant="ghost"
+        fullWidth
+        onPress={switchToDietician}
+      />
+      <Button label="Sign out" variant="secondary" fullWidth onPress={signOut} style={{ marginTop: spacing.sm }} />
 
       <Text
         variant="caption"
@@ -211,7 +228,9 @@ export default function ClientProfile() {
         align="center"
         style={{ marginTop: spacing.xxl }}
       >
-        Not medical advice. A personal tool used alongside your dietician.
+        Not medical advice. This is a personal informational tool used alongside
+        your dietician — it helps you follow a plan, it does not diagnose or
+        prescribe.
       </Text>
     </Screen>
   );

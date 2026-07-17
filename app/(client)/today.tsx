@@ -1,8 +1,18 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Alert, Platform, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 
-import { Button, Card, DataRow, Placeholder, Screen, Tag, Text } from '@/components';
+import {
+  Button,
+  Card,
+  DataRow,
+  ErrorState,
+  Placeholder,
+  Screen,
+  SkeletonCard,
+  Tag,
+  Text,
+} from '@/components';
 import { useAuth } from '@/lib/auth';
 import { useDietProfile } from '@/features/goals/useDietProfile';
 import {
@@ -43,14 +53,30 @@ export default function Today() {
   const userId = session?.user.id;
 
   const { data: diet } = useDietProfile(userId, true);
-  const { data: logs, isLoading } = useLogsForDay(userId);
+  const { data: logs, isLoading, isError, refetch } = useLogsForDay(userId);
   const del = useDeleteLog(userId);
+
+  if (isError) {
+    return (
+      <Screen>
+        <ErrorState onRetry={() => refetch()} />
+      </Screen>
+    );
+  }
 
   if (isLoading || !diet) {
     return (
-      <Screen>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={colors.accent} />
+      <Screen scroll>
+        <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
+          <Text variant="overline" color="textTertiary">
+            TODAY
+          </Text>
+          <Text variant="h1">Your day</Text>
+        </View>
+        <View style={{ gap: spacing.lg }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
       </Screen>
     );

@@ -4,7 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { Screen } from '@/components';
 import { useAuth } from '@/lib/auth';
-import { GoalsEditor } from '@/features/goals/GoalsEditor';
+import { OnboardingWizard } from '@/features/onboarding/OnboardingWizard';
 import {
   useDietProfile,
   useSaveDietProfile,
@@ -23,7 +23,7 @@ export default function Goals() {
 
   const isOnboarding = !data;
 
-  function handleSubmit(draft: Omit<DietProfile, 'user_id'>) {
+  function handleComplete(draft: Omit<DietProfile, 'user_id'>) {
     save.mutate(draft, {
       onSuccess: () => {
         // First-time setup drops the user into the app; editing returns back.
@@ -45,13 +45,11 @@ export default function Goals() {
 
   return (
     <Screen scroll>
-      <GoalsEditor
+      <OnboardingWizard
         initial={data ?? undefined}
-        title={isOnboarding ? 'Set your goals' : 'Edit goals'}
-        submitLabel={isOnboarding ? 'Save & start scanning' : 'Save changes'}
         saving={save.isPending}
         error={save.error ? (save.error as Error).message : null}
-        onSubmit={handleSubmit}
+        onComplete={handleComplete}
         onCancel={isOnboarding ? undefined : () => router.back()}
       />
     </Screen>

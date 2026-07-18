@@ -23,18 +23,18 @@ export default function ClientLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Scan',
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="scan-outline" color={color} size={size} />
+            <Ionicons name="home-outline" color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
-        name="today"
+        name="scan"
         options={{
-          title: 'Today',
+          title: 'Scan',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="ellipse-outline" color={color} size={size} />
+            <Ionicons name="scan-outline" color={color} size={size} />
           ),
         }}
       />

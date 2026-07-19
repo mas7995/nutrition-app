@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Screen, Text } from '@/components';
+import { Button, Text } from '@/components';
 import { useAuth } from '@/lib/auth';
 import { evaluateAlignment } from '@/engine/alignment';
 import { useDietProfile } from '@/features/goals/useDietProfile';
@@ -21,13 +20,12 @@ import {
   useLogFood,
   useLogsForDay,
 } from '@/features/log/useFoodLogs';
+import { BarcodeScanner } from '@/features/scan/BarcodeScanner';
 import { ManualEntryCard } from '@/features/scan/ManualEntryCard';
 import { VerdictCard } from '@/features/scan/VerdictCard';
 import { NormalizedFood } from '@/types/food';
 import { Meal } from '@/types/log';
 import { useTheme } from '@/theme/ThemeProvider';
-
-const BARCODE_TYPES = ['ean13', 'ean8', 'upc_a', 'upc_e'] as const;
 
 export default function Scan() {
   const { colors, spacing, radius } = useTheme();
@@ -35,7 +33,6 @@ export default function Scan() {
   const { session } = useAuth();
   const userId = session?.user.id;
 
-  const [permission, requestPermission] = useCameraPermissions();
   const { data: diet } = useDietProfile(userId, true);
   const { data: logs } = useLogsForDay(userId);
   const logFood = useLogFood(userId);
@@ -98,95 +95,67 @@ export default function Scan() {
     reset();
   }
 
-  // ── Permission states ──────────────────────────────────────────
-  if (!permission) {
-    return (
-      <Screen>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
-      </Screen>
-    );
-  }
-
-  if (!permission.granted) {
-    return (
-      <Screen>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg }}>
-          <Ionicons name="camera-outline" size={40} color={colors.textTertiary} />
-          <Text variant="h2" align="center">
-            Camera access
-          </Text>
-          <Text variant="body" color="textSecondary" align="center">
-            We use the camera to scan barcodes and check them against your goals.
-          </Text>
-          <Button label="Allow camera" onPress={requestPermission} />
-          <Button label="Enter a food manually" variant="ghost" onPress={() => setManualMode(true)} />
-        </View>
-      </Screen>
-    );
-  }
-
   // ── Camera + scan overlay ──────────────────────────────────────
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <CameraView
-        style={{ flex: 1 }}
-        barcodeScannerSettings={{ barcodeTypes: [...BARCODE_TYPES] }}
-        onBarcodeScanned={sheetOpen ? undefined : ({ data }) => handleScanned(data)}
-      />
-
-      {/* Overlay */}
-      <View
-        style={{
-          position: 'absolute',
-          top: insets.top + spacing.lg,
-          left: spacing.xl,
-          right: spacing.xl,
-        }}
+      <BarcodeScanner
+        active={!sheetOpen}
+        onScanned={handleScanned}
+        onUnavailable={() => setManualMode(true)}
       >
-        <Text variant="overline" style={{ color: '#FBFAF6', opacity: 0.8 }}>
-          SCAN A BARCODE
-        </Text>
-        <Text variant="h2" style={{ color: '#FBFAF6' }}>
-          Point at a product
-        </Text>
-      </View>
-
-      {/* Scan frame */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Overlay */}
         <View
+          pointerEvents="box-none"
           style={{
-            width: 260,
-            height: 170,
-            borderRadius: radius.lg,
-            borderWidth: 2,
-            borderColor: 'rgba(251,250,246,0.9)',
-          }}
-        />
-      </View>
-
-      {/* Manual entry entry-point */}
-      <View style={{ position: 'absolute', bottom: insets.bottom + spacing.lg, left: spacing.xl, right: spacing.xl }}>
-        <Pressable
-          onPress={() => setManualMode(true)}
-          style={{
-            alignSelf: 'center',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-            backgroundColor: 'rgba(0,0,0,0.55)',
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            borderRadius: radius.pill,
+            position: 'absolute',
+            top: insets.top + spacing.lg,
+            left: spacing.xl,
+            right: spacing.xl,
           }}
         >
-          <Ionicons name="create-outline" size={18} color="#FBFAF6" />
-          <Text variant="bodyStrong" style={{ color: '#FBFAF6' }}>
-            No barcode? Enter manually
+          <Text variant="overline" style={{ color: '#FBFAF6', opacity: 0.8 }}>
+            SCAN A BARCODE
           </Text>
-        </Pressable>
-      </View>
+          <Text variant="h2" style={{ color: '#FBFAF6' }}>
+            Point at a product
+          </Text>
+        </View>
+
+        {/* Scan frame */}
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+          <View
+            style={{
+              width: 260,
+              height: 170,
+              borderRadius: radius.lg,
+              borderWidth: 2,
+              borderColor: 'rgba(251,250,246,0.9)',
+            }}
+          />
+        </View>
+
+        {/* Manual entry entry-point */}
+        <View pointerEvents="box-none" style={{ position: 'absolute', bottom: insets.bottom + spacing.lg, left: spacing.xl, right: spacing.xl }}>
+          <Pressable
+            onPress={() => setManualMode(true)}
+            style={{
+              alignSelf: 'center',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+              backgroundColor: 'rgba(0,0,0,0.55)',
+              paddingHorizontal: spacing.lg,
+              paddingVertical: spacing.md,
+              borderRadius: radius.pill,
+            }}
+          >
+            <Ionicons name="create-outline" size={18} color="#FBFAF6" />
+            <Text variant="bodyStrong" style={{ color: '#FBFAF6' }}>
+              No barcode? Enter manually
+            </Text>
+          </Pressable>
+        </View>
+      </BarcodeScanner>
 
       {/* Result / manual / loading sheet */}
       <Modal visible={sheetOpen} transparent animationType="slide" onRequestClose={reset}>
